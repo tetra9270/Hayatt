@@ -19,9 +19,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
 
     // OTP State
-    const [useOtp, setUseOtp] = useState(false);
-    const [otpSent, setOtpSent] = useState(false);
-    const [otpCode, setOtpCode] = useState('');
+
 
     const router = useRouter();
     const login = useAuthStore((state) => state.login);
@@ -42,34 +40,7 @@ export default function LoginPage() {
         }
     };
 
-    const handleSendOtp = async () => {
-        if (!email) { setError("Please enter your email first."); return; }
-        setLoading(true);
-        setError('');
-        try {
-            await api.post('/auth/send-otp', { email });
-            setOtpSent(true);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to send OTP.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const handleOtpVerify = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        try {
-            const res = await api.post('/auth/verify-otp', { email, otp: otpCode });
-            login(res.data);
-            router.push('/');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Invalid OTP.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden text-white">
@@ -118,7 +89,7 @@ export default function LoginPage() {
                             <p className="text-sm text-gray-400">Initialize your session to proceed.</p>
                         </div>
 
-                        <form onSubmit={useOtp ? handleOtpVerify : handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             {error && (
                                 <motion.div
                                     initial={{ opacity: 0, height: 0 }}
@@ -129,15 +100,7 @@ export default function LoginPage() {
                                 </motion.div>
                             )}
 
-                            {otpSent && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center"
-                                >
-                                    OTP dispatched to secure comms channel.
-                                </motion.div>
-                            )}
+
 
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email Access</Label>
@@ -151,84 +114,50 @@ export default function LoginPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        disabled={otpSent}
                                     />
                                 </div>
                             </div>
 
-                            {!useOtp && (
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <Label htmlFor="password">Security Protocol</Label>
-                                        <Link href="#" className="text-xs text-blue-400 hover:text-blue-300">
-                                            Forgot key?
-                                        </Link>
-                                    </div>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50 focus:ring-purple-500/20 text-white transition-all h-10"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <Label htmlFor="password">Security Protocol</Label>
+                                    <Link href="#" className="text-xs text-blue-400 hover:text-blue-300">
+                                        Forgot key?
+                                    </Link>
                                 </div>
-                            )}
-
-                            {useOtp && otpSent && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="otp">One-Time Password</Label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                                        <Input
-                                            id="otp"
-                                            type="text"
-                                            placeholder="XXXXXX"
-                                            className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50 focus:ring-purple-500/20 text-white transition-all h-10 tracking-widest"
-                                            value={otpCode}
-                                            onChange={(e) => setOtpCode(e.target.value)}
-                                            required
-                                        />
-                                    </div>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        className="pl-10 bg-white/5 border-white/10 focus:border-purple-500/50 focus:ring-purple-500/20 text-white transition-all h-10"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
                                 </div>
-                            )}
-
-                            {useOtp && !otpSent ? (
-                                <Button
-                                    type="button"
-                                    onClick={handleSendOtp}
-                                    disabled={loading}
-                                    className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all"
-                                >
-                                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Request OTP Code'}
-                                </Button>
-                            ) : (
-                                <Button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Authenticating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Initialize Session <ArrowRight className="ml-2 h-4 w-4" />
-                                        </>
-                                    )}
-                                </Button>
-                            )}
-
-                            <div className="text-center">
-                                <button type="button" onClick={() => { setUseOtp(!useOtp); setOtpSent(false); setError(''); }} className="text-xs text-blue-400 hover:text-white transition-colors uppercase tracking-widest font-bold">
-                                    {useOtp ? "Switch to Password Auth" : "Switch to OTP Authentication"}
-                                </button>
                             </div>
+
+
+
+                            <Button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Authenticating...
+                                    </>
+                                ) : (
+                                    <>
+                                        Initialize Session <ArrowRight className="ml-2 h-4 w-4" />
+                                    </>
+                                )}
+                            </Button>
+
+
                         </form>
 
                         <div className="mt-8 text-center text-sm">
