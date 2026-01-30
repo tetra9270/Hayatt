@@ -1,7 +1,7 @@
 "use client";
 import { API_BASE_URL } from '@/lib/utils';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Package, User, LogOut, MapPin, CheckCircle, Truck, Box, Ticket, Copy, XCircle, Heart } from 'lucide-react';
@@ -40,7 +40,7 @@ interface Coupon {
     message: string;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [coupons, setCoupons] = useState<Coupon[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -610,5 +610,13 @@ export default function DashboardPage() {
             </div>
             <Footer />
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Loading Mission Control...</div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }
